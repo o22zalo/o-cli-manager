@@ -2,28 +2,18 @@
 
 const inquirer     = require('inquirer');
 const chalk        = require('chalk');
-const path         = require('path');
-const fs           = require('fs');
 
 const engine       = require('../core/engine');
-const taskEngine   = require('../core/task-engine');
 const session      = require('../core/session');
 const configMgr    = require('../core/config-manager');
-const { showResultTable, showActionResultTable } = require('./display');
+const { showActionResultTable } = require('./display');
 const { write: writeChangelog, updateTaskStatusExecution } = require('../core/changelog-writer');
 const logger                                     = require('../core/logger');
-const { withSpinner }                            = require('../core/parallel-runner');
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function getServiceNames() {
   return engine.listServices().map(s => ({ name: s.displayName + ' (' + s.name + ')', value: s.name }));
-}
-
-function getTaskChoices() {
-  const tasks = taskEngine.listTasks();
-  if (tasks.length === 0) return [{ name: '(Khong co task file nao trong ./tasks/)', value: null }];
-  return tasks.map(t => ({ name: t, value: t }));
 }
 
 function getProfileChoices(serviceName) {
@@ -99,13 +89,17 @@ async function runConfigMenu(serviceName) {
         { type: 'input', name: 'description', message: 'Mo ta (optional):',  default: '' },
         { type: 'password', name: 'accessToken', message: 'Access Token:', mask: '*' },
         { type: 'input', name: 'org_id',      message: 'Organization ID (optional):', default: '' },
+        { type: 'password', name: 'defaultDbPass', message: 'Mat khau DB mac dinh (optional):', mask: '*' },
       ]);
 
       const profile = {
         name: answers.name,
         description: answers.description || undefined,
         credentials: { accessToken: answers.accessToken },
-        meta: { organization_id: answers.org_id || '' },
+        meta: {
+          organization_id: answers.org_id || '',
+          default_db_pass: answers.defaultDbPass || '',
+        },
       };
 
       configMgr.saveProfile(serviceName, profile);
@@ -130,106 +124,7 @@ async function runConfigMenu(serviceName) {
   }
 }
 
-// ── Flow A: Run task file ──────────────────────────────────────────────────────
-
-async function runTaskFlow() {
-  const lastService = session.getLastService();
-  const taskChoices = getTaskChoices();
-
-  if (taskChoices.length === 1 && taskChoices[0].value === null) {
-    console.log(chalk.yellow('[WARN] Khong co task file nao trong ./tasks/*.yaml'));
-    return;
-  }
-
-  // Pick task
-  const lastTask = lastService ? session.getLastUsed(lastService, 'last_task') : null;
-  const { taskName } = await inquirer.prompt([{
-    type: 'list', name: 'taskName', message: 'Chon task file:',
-    choices: taskChoices,
-    default: lastTask || undefined,
-  }]);
-  if (!taskName) return;
-
-  // Load task to get service
-  let taskObj;
-  try {
-    taskObj = taskEngine.load(taskName);
-  } catch (err) {
-    console.error(chalk.red('[ERROR] ' + err.message));
-    return;
-  }
-
-  const serviceName = taskObj.service;
-  const lastProfile = session.getLastUsed(serviceName, 'last_profile') || 'default';
-
-  // Pick profile
-  const profileChoices = getProfileChoices(serviceName);
-  const { profileName } = await inquirer.prompt([{
-    type: 'list', name: 'profileName', message: 'Chon profile (' + serviceName + '):',
-    choices: profileChoices,
-    default: lastProfile,
-  }]);
-
-  // Load config
-  const { profile } = engine.loadConfig(serviceName, profileName);
-  profile._serviceName = serviceName;
-
-  // Run with spinner
-  let runResult;
-  try {
-    runResult = await withSpinner(
-      'Dang thuc thi task ' + taskName + '...',
-      () => taskEngine.run(taskObj, profile, logger)
-    );
-  } catch (err) {
-    console.error(chalk.red('[ERROR] ' + err.message));
-    return;
-  }
-
-  // Show result table
-  showResultTable({
-    taskName,
-    profile: profileName,
-    results: runResult.results,
-    totalMs: runResult.totalDuration,
-  });
-
-  // Update session
-  session.setLastUsed(serviceName, 'last_profile', profileName);
-  session.setLastUsed(serviceName, 'last_task', taskName);
-
-  // State consistency: update config.last_used only on SUCCESS
-  if (runResult.success) {
-    configMgr.updateLastUsed(serviceName, {
-      profile: profileName,
-      task: taskName,
-      last_run_at: new Date().toISOString(),
-    });
-  }
-
-  // Write changelog
-  writeChangelog({
-    task: taskName,
-    service: serviceName,
-    profile: profileName,
-    results: runResult.results,
-    status: runResult.success ? 'SUCCESS' : 'PARTIAL',
-    totalMs: runResult.totalDuration,
-    description: taskObj.description || '',
-  });
-
-  if (runResult.success) {
-    updateTaskStatusExecution({
-      service: serviceName,
-      task: taskName,
-      status: 'SUCCESS',
-    });
-  }
-
-  console.log(chalk.dim('[OK] Da cap nhat .opushforce.message va CHANGE_LOGS.md'));
-}
-
-// ── Flow B: Manual action ──────────────────────────────────────────────────────
+// ── Manual action flow ─────────────────────────────────────────────────────────
 
 async function runManualFlow() {
   const services = getServiceNames();
@@ -377,7 +272,6 @@ async function runMainMenu() {
       name: 'choice',
       message: chalk.bold('Menu chinh — chon hanh dong:'),
       choices: [
-        { name: '\u25B6  Chay Task File    (auto-discover ./tasks/*.yaml)', value: 'task'   },
         { name: '\u2699   Thao tac thu cong  (chon service + action)',        value: 'manual' },
         { name: '\ud83d\udee0  Quan ly Config    (them/sua/xoa profile)',           value: 'config' },
         new inquirer.Separator(),
@@ -391,7 +285,6 @@ async function runMainMenu() {
     }
 
     try {
-      if (choice === 'task')   await runTaskFlow();
       if (choice === 'manual') await runManualFlow();
       if (choice === 'config') await runConfigManagementFlow();
     } catch (err) {
@@ -409,7 +302,6 @@ async function runMainMenu() {
       name: 'next',
       message: 'Tiep theo?',
       choices: [
-        { name: 'Chay tiep task khac',  value: 'task'   },
         { name: 'Thao tac thu cong',    value: 'manual' },
         { name: 'Doi profile / config', value: 'config' },
         { name: 'Thoat',                value: 'exit'   },
@@ -421,7 +313,6 @@ async function runMainMenu() {
       process.exit(0);
     }
 
-    if (next === 'task')   { await runTaskFlow();              continue; }
     if (next === 'manual') { await runManualFlow();            continue; }
     if (next === 'config') { await runConfigManagementFlow(); continue; }
   }

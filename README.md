@@ -3,7 +3,6 @@
 CLI Service Manager là công cụ CLI tương tác để quản lý và chạy tác vụ (task/action) trên nhiều dịch vụ SaaS/Cloud theo kiến trúc plugin.
 
 Hiện tại codebase đã có sẵn plugin **Supabase**, hỗ trợ:
-- Chạy theo **Task File YAML** (tuần tự + song song + retry/continue/stop).
 - Chạy **thủ công nhiều action** trong một lần thao tác.
 - Quản lý nhiều **profile cấu hình** cho từng service.
 - Ghi log, lưu trạng thái phiên làm việc, cập nhật changelog tự động.
@@ -63,9 +62,8 @@ node index.js --export-zip
 │   └── supabase.js
 ├── configs/                  # Cấu hình theo service
 │   └── supabase.example.yaml
-├── tasks/                    # Task YAML để chạy tự động
-│   ├── supabase-example.yaml
-│   └── TASK_STATUS.yaml      # file theo dõi tiến độ task nội bộ dự án
+├── tasks/                    # Theo dõi trạng thái task nội bộ dự án
+│   └── TASK_STATUS.yaml
 ├── src/
 │   ├── cli/                  # Menu + hiển thị bảng kết quả
 │   └── core/                 # Engine, task-engine, logger, session, config manager...
@@ -107,7 +105,6 @@ service: supabase
 last_used:
   profile: default
   action: listProjects
-  task: supabase-example
 
 profiles:
   - name: default
@@ -131,68 +128,15 @@ node index.js
 ```
 
 Menu chính gồm:
-1. **Chạy Task File**
-2. **Thao tác thủ công**
-3. **Quản lý Config**
-4. **Thoát**
+1. **Thao tác thủ công**
+2. **Quản lý Config**
+3. **Thoát**
 
 Sau mỗi lần chạy xong, CLI hỏi bước tiếp theo để bạn tiếp tục ngay.
 
 ---
 
-## 5.2 Luồng 1: Chạy Task File (khuyến nghị)
-
-Khi chọn “Chạy Task File”, CLI sẽ:
-1. Tự quét `./tasks/*.yaml`.
-2. Bạn chọn task.
-3. Từ task biết được `service`, sau đó chọn profile.
-4. Chạy task theo engine:
-   - `type: sequential`: chạy tuần tự.
-   - `type: parallel`: các step liền kề kiểu `parallel` sẽ chạy đồng thời.
-5. In bảng kết quả từng step (status, duration, output tóm tắt).
-6. Tự cập nhật state/changelog/log.
-
-### Ví dụ task có context + parallel
-
-```yaml
-name: supabase-inspect-account
-service: supabase
-steps:
-  - id: list_projects
-    action: listProjects
-    type: sequential
-    on_error: stop
-    params: {}
-
-  - id: get_keys_first
-    action: getProjectApiKeys
-    type: sequential
-    on_error: continue
-    params:
-      project_ref: "{{ steps.list_projects.output.data[0].id }}"
-
-  - id: list_projects_again
-    action: listProjects
-    type: parallel
-    on_error: continue
-    params: {}
-
-  - id: list_projects_verify
-    action: listProjects
-    type: parallel
-    on_error: continue
-    params: {}
-```
-
-### Quy tắc `on_error`
-
-- `stop`: dừng task nếu step lỗi.
-- `continue`: bỏ qua lỗi và chạy step tiếp theo.
-- `retry:N`: thử lại N lần, nếu vẫn lỗi thì xử lý như failed.
-
----
-
-## 5.3 Luồng 2: Thao tác thủ công (Manual)
+## 5.2 Luồng thao tác thủ công (Manual)
 
 Khi chọn “Thao tác thủ công”, CLI sẽ:
 1. Chọn service.
@@ -206,64 +150,40 @@ Khi chọn “Thao tác thủ công”, CLI sẽ:
 
 - `listProjects`
 - `createProject`
+- `createProjectWithSetup`
 - `getProjectApiKeys`
+- `getPostgresConnection`
+- `listStorageBuckets`
+- `createStorageBucket`
+- `getProjectConnectionBundle`
 - `pauseProject`
 - `restoreProject`
 
 ---
 
-## 5.4 Luồng 3: Quản lý Config trong CLI
+## 5.3 Luồng quản lý Config trong CLI
 
 Vào menu “Quản lý Config” để:
 - Xem danh sách profile.
 - Thêm profile mới.
 - Sửa profile.
+- Khai báo `meta.default_db_pass` để làm mật khẩu DB mặc định khi tạo project.
 - Xóa profile.
 
 Thông tin nhạy cảm (token/key/password/secret...) được mask khi hiển thị/log (`***`).
 
 ---
 
-## 6) Định nghĩa Task File đầy đủ
+## 6) Log, state và các file auto-generate
 
-Schema tối thiểu:
-
-```yaml
-name: ten-task
-description: "Mo ta"
-service: supabase
-version: "1.0.0"
-
-steps:
-  - id: step_1
-    action: listProjects
-    type: sequential      # sequential | parallel
-    on_error: stop        # stop | continue | retry:N
-    params: {}
-```
-
-### Tham chiếu context giữa các step
-
-Có thể dùng template `{{ ... }}` để lấy output step trước:
-
-```yaml
-project_ref: "{{ steps.list_projects.output.data[0].id }}"
-```
-
-Nếu tham chiếu không tồn tại, step sẽ báo lỗi.
-
----
-
-## 7) Log, state và các file auto-generate
-
-Sau khi chạy task/action, hệ thống tự sinh/cập nhật:
+Sau khi chạy action, hệ thống tự sinh/cập nhật:
 
 - `logs/YYYY-MM-DD-<service>.log`: log chi tiết theo ngày/service.
-- `state/session.yaml`: nhớ lần dùng gần nhất (service/profile/task/action).
+- `state/session.yaml`: nhớ lần dùng gần nhất (service/profile/action).
 - `CHANGE_LOGS.md`: changelog kỹ thuật (prepend bản ghi mới).
 - `CHANGE_LOGS_USER.md`: changelog thân thiện người dùng.
 - `.opushforce.message`: message tóm tắt lần chạy gần nhất.
-- `TASK_STATUS.yaml` (root): cập nhật `last_execution` khi run success.
+- `tasks/TASK_STATUS.yaml`: cập nhật `last_execution` khi run success.
 
 ---
 

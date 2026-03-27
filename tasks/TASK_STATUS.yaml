@@ -1,6 +1,6 @@
 meta:
   source_of_truth: true
-  last_updated: '2026-03-27T04:40:00Z'
+  last_updated: '2026-03-27T07:10:00Z'
   maintained_by: auto
 tasks:
   TASK-01:
@@ -48,8 +48,12 @@ tasks:
     title: Memory map du an cho tat ca agent
     status: DONE
     note: Tao memory.md gom ban do module, diem vao nhanh va checklist verify
+  TASK-15:
+    title: Toi uu luong Supabase va loai bo menu Task File
+    status: DONE
+    note: Bo luong task file khoi menu; bo sung action Supabase cho tao project + bucket + bundle ket noi
 last_execution:
-  at: '2026-03-27T04:40:00Z'
-  service: cli-service-manager
-  task: docs-followup-task-template-memory
+  at: '2026-03-27T07:10:00Z'
+  service: supabase
+  task: task-20260327-01
   status: SUCCESS

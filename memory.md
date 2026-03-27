@@ -5,7 +5,6 @@
 ## 1) Mục tiêu hệ thống
 
 CLI tương tác để chạy task/action cho các service plugin (hiện có Supabase), hỗ trợ:
-- Task YAML (sequential + parallel + retry/continue/stop)
 - Chạy manual nhiều action
 - Quản lý profile config
 - Ghi log + session state + changelog/release message
@@ -22,7 +21,7 @@ CLI tương tác để chạy task/action cho các service plugin (hiện có Su
 
 ### 3.1 CLI/UI layer
 - `src/cli/menu.js`
-  - Main menu: chạy task file / manual / config / thoát
+  - Main menu: manual / config / thoát
   - Điều hướng luồng tương tác
 - `src/cli/display.js`
   - Render bảng kết quả, mask dữ liệu nhạy cảm, summary output
@@ -32,10 +31,7 @@ CLI tương tác để chạy task/action cho các service plugin (hiện có Su
   - Discover plugin từ `services/*.js`
   - Gọi action plugin, quản lý context thực thi
 - `src/core/task-engine.js`
-  - Load + validate task YAML
-  - Chạy step sequential/parallel
-  - Resolve template `{{ steps.* }}`
-  - `on_error`: stop | continue | retry:N
+  - Legacy engine cho Task YAML (khong con hien trong menu chinh)
 - `src/core/parallel-runner.js`
   - Tiện ích run tác vụ song song + spinner
 - `src/core/config-manager.js`
@@ -55,13 +51,11 @@ CLI tương tác để chạy task/action cho các service plugin (hiện có Su
 ### 3.3 Plugin/service layer
 - `services/supabase.js`
   - Plugin Supabase (Management API)
-  - Actions: listProjects/createProject/getProjectApiKeys/pauseProject/restoreProject
+  - Actions: listProjects/createProject/createProjectWithSetup/getProjectApiKeys/getPostgresConnection/listStorageBuckets/createStorageBucket/getProjectConnectionBundle/pauseProject/restoreProject
 
 ### 3.4 Data/config/task docs layer
 - `configs/supabase.example.yaml`
   - Mẫu config service
-- `tasks/supabase-example.yaml`
-  - Mẫu task YAML chạy theo engine
 - `tasks/TASK_STATUS.yaml`
   - **Source of truth** trạng thái task dự án
 - `tasks/sumary.md`
@@ -75,7 +69,7 @@ CLI tương tác để chạy task/action cho các service plugin (hiện có Su
 
 ## 4) Luồng chạy chuẩn cần nhớ
 
-1. Chọn mode (Task File / Manual / Config)
+1. Chọn mode (Manual / Config)
 2. Resolve service + profile
 3. Execute actions
 4. Collect result + render table
@@ -86,7 +80,7 @@ CLI tương tác để chạy task/action cho các service plugin (hiện có Su
 
 - **Đổi UX/menu/flow nhập liệu** → `src/cli/menu.js`
 - **Đổi cách hiển thị kết quả** → `src/cli/display.js`
-- **Lỗi chạy step YAML / retry / context** → `src/core/task-engine.js`
+- **Lỗi action thủ công / hỏi tham số** → `src/cli/menu.js`
 - **Lỗi load plugin/action** → `src/core/engine.js`
 - **Lỗi profile/config yaml** → `src/core/config-manager.js`
 - **Lỗi session last_used** → `src/core/session.js` (+ có thể `config-manager.js`)
@@ -98,7 +92,6 @@ CLI tương tác để chạy task/action cho các service plugin (hiện có Su
 
 - `node index.js --help`
 - `node -e "const e=require('./src/core/engine'); console.log(e.listServices().map(x=>x.name))"`
-- `node -e "const t=require('./src/core/task-engine'); const y=require('js-yaml'); const fs=require('fs'); const obj=y.load(fs.readFileSync('./tasks/supabase-example.yaml','utf8')); console.log(t.validateSchema(obj))"`
 - `node -e "const s=require('./services/supabase'); console.log(Object.keys(s.actions))"`
 
 ## 7) Quy ước cập nhật tài liệu sau mỗi đợt follow-up

@@ -7,7 +7,6 @@ service: supabase
 last_used:
   profile: default
   action: listProjects
-  task: supabase-example
 
 profiles:
   - name: default
@@ -18,6 +17,12 @@ profiles:
     meta:
       # [OPTIONAL] Organization ID - de trong neu khong dung
       organization_id: ""
+      # [OPTIONAL] Mat khau DB mac dinh, dung cho createProject/createProjectWithSetup
+      default_db_pass: ""
+
+defaults:
+  # [OPTIONAL] Gia tri fallback toan cuc (neu profile khong co meta.default_db_pass)
+  default_db_pass: ""
 
   # Them profile khac neu co nhieu tai khoan
   # - name: client-abc
