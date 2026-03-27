@@ -7,6 +7,7 @@ service: supabase
 last_used:
   profile: default
   action: listProjects
+passdefault:  
 
 profiles:
   - name: default
