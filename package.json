@@ -1,0 +1,31 @@
+{
+  "name": "cli-service-manager",
+  "version": "1.0.0",
+  "description": "CLI tool quan ly va thuc thi nghiep vu tren nhieu nen tang SaaS/Cloud",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest",
+    "export": "node index.js --export-zip"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "archiver": "^6.0.1",
+    "axios": "^1.6.7",
+    "chalk": "^4.1.2",
+    "chokidar": "^3.5.3",
+    "cli-table3": "^0.6.3",
+    "inquirer": "^8.2.6",
+    "js-yaml": "^4.1.0",
+    "ora": "^5.4.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "keywords": ["cli", "saas", "automation", "task-runner"],
+  "author": "",
+  "license": "MIT"
+}
