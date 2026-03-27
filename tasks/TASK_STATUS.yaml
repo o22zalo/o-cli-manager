@@ -1,0 +1,47 @@
+meta:
+  source_of_truth: true
+  last_updated: '2026-03-27T04:16:17.362Z'
+  maintained_by: auto
+tasks:
+  TASK-01:
+    title: Khoi tao project structure
+    status: DONE
+  TASK-02:
+    title: Core Logger Module
+    status: DONE
+  TASK-03:
+    title: Core Engine + Plugin Loader
+    status: DONE
+  TASK-04:
+    title: Config Manager
+    status: DONE
+  TASK-05:
+    title: Session State Manager
+    status: PARTIAL
+    note: Can dong bo config.last_used sau run SUCCESS
+  TASK-06:
+    title: Task File Engine
+    status: DONE
+  TASK-07:
+    title: Service Supabase
+    status: DONE
+  TASK-08:
+    title: Task File mau Supabase
+    status: DONE
+  TASK-09:
+    title: Interactive CLI + Parallel Runner
+    status: DONE
+  TASK-10:
+    title: Protocol changelog + opushforce
+    status: DONE
+  TASK-11:
+    title: ZIP Export + Config Templates + README
+    status: DONE
+  TASK-12:
+    title: 'Governance: status source + evidence checklist'
+    status: DONE
+last_execution:
+  at: '2026-03-27T04:16:17.362Z'
+  service: supabase
+  task: manual-smoke
+  status: SUCCESS

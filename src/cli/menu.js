@@ -10,7 +10,7 @@ const taskEngine   = require('../core/task-engine');
 const session      = require('../core/session');
 const configMgr    = require('../core/config-manager');
 const { showResultTable, showActionResultTable } = require('./display');
-const { write: writeChangelog }                  = require('../core/changelog-writer');
+const { write: writeChangelog, updateTaskStatusExecution } = require('../core/changelog-writer');
 const logger                                     = require('../core/logger');
 const { withSpinner }                            = require('../core/parallel-runner');
 
@@ -198,6 +198,15 @@ async function runTaskFlow() {
   session.setLastUsed(serviceName, 'last_profile', profileName);
   session.setLastUsed(serviceName, 'last_task', taskName);
 
+  // State consistency: update config.last_used only on SUCCESS
+  if (runResult.success) {
+    configMgr.updateLastUsed(serviceName, {
+      profile: profileName,
+      task: taskName,
+      last_run_at: new Date().toISOString(),
+    });
+  }
+
   // Write changelog
   writeChangelog({
     task: taskName,
@@ -208,6 +217,14 @@ async function runTaskFlow() {
     totalMs: runResult.totalDuration,
     description: taskObj.description || '',
   });
+
+  if (runResult.success) {
+    updateTaskStatusExecution({
+      service: serviceName,
+      task: taskName,
+      status: 'SUCCESS',
+    });
+  }
 
   console.log(chalk.dim('[OK] Da cap nhat .opushforce.message va CHANGE_LOGS.md'));
 }
@@ -303,15 +320,33 @@ async function runManualFlow() {
   session.setLastUsed(serviceName, 'last_profile', profileName);
   session.setLastUsed(serviceName, 'last_action', selectedActions[selectedActions.length - 1]);
 
+  // State consistency: update config.last_used only on SUCCESS
+  const isManualSuccess = results.every(r => r.success);
+  if (isManualSuccess) {
+    configMgr.updateLastUsed(serviceName, {
+      profile: profileName,
+      action: selectedActions[selectedActions.length - 1],
+      last_run_at: new Date().toISOString(),
+    });
+  }
+
   // Write changelog
   writeChangelog({
     task: 'manual-' + selectedActions.join('-'),
     service: serviceName,
     profile: profileName,
     results: results.map(r => ({ stepId: r.action, id: r.action, status: r.success ? 'SUCCESS' : 'FAILED' })),
-    status: results.every(r => r.success) ? 'SUCCESS' : 'PARTIAL',
+    status: isManualSuccess ? 'SUCCESS' : 'PARTIAL',
     totalMs,
   });
+
+  if (isManualSuccess) {
+    updateTaskStatusExecution({
+      service: serviceName,
+      task: 'manual-' + selectedActions.join('-'),
+      status: 'SUCCESS',
+    });
+  }
 }
 
 // ── Config management flow ─────────────────────────────────────────────────────

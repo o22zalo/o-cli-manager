@@ -2,6 +2,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const yaml = require('js-yaml');
 
 const ROOT = process.cwd();
 
@@ -79,6 +80,39 @@ function write(opts) {
   prependToFile(path.join(ROOT, 'CHANGE_LOGS_USER.md'), userEntry);
 }
 
+
+function updateTaskStatusExecution({ service, task, status }) {
+  const statusPath = path.join(ROOT, 'TASK_STATUS.yaml');
+  const now = new Date().toISOString();
+
+  let doc = {
+    meta: { source_of_truth: true, last_updated: now, maintained_by: 'auto' },
+    tasks: {},
+    last_execution: { at: null, service: null, task: null, status: null },
+  };
+
+  if (fs.existsSync(statusPath)) {
+    try {
+      const loaded = yaml.load(fs.readFileSync(statusPath, 'utf8'));
+      if (loaded && typeof loaded === 'object') doc = loaded;
+    } catch (_) {
+      // Keep default doc if YAML is invalid
+    }
+  }
+
+  if (!doc.meta) doc.meta = {};
+  doc.meta.last_updated = now;
+  if (!doc.last_execution || typeof doc.last_execution !== 'object') {
+    doc.last_execution = {};
+  }
+  doc.last_execution.at = now;
+  doc.last_execution.service = service || null;
+  doc.last_execution.task = task || null;
+  doc.last_execution.status = status || null;
+
+  fs.writeFileSync(statusPath, yaml.dump(doc, { indent: 2, lineWidth: 120 }), 'utf8');
+}
+
 async function exportZip() {
   const archiver = require('archiver');
   const date     = new Date().toISOString().substring(0, 10).replace(/-/g, '');
@@ -121,4 +155,4 @@ async function exportZip() {
   });
 }
 
-module.exports = { write, exportZip };
+module.exports = { write, exportZip, updateTaskStatusExecution };
