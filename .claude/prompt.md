@@ -64,17 +64,17 @@ OUT OF SCOPE:
 
 ⚠️ ĐÂY LÀ NGUỒN SỰ THẬT DUY NHẤT. Đọc phần này TRƯỚC khi làm bất cứ gì.
 
-Quick Status: DONE: 0 | IN PROGRESS: 0 | TODO: 11 | BLOCKED: 0
+Quick Status: DONE: 10 | IN PROGRESS: 1 | TODO: 0 | BLOCKED: 0
 
 Next Actions (làm NGAY — song song):
 
-1. TASK-01 — Khởi tạo project structure + package.json
-2. TASK-02 — Core Logger Module
+1. TASK-05 — Đồng bộ state session.yaml ↔ configs/<service>.yaml (finalize)
+2. TASK-12 — Governance: tự động cập nhật Task Board machine-readable + regression evidence
 
 ——— TASK LIST ———
 
 TASK-01: Khởi tạo project structure
-Status : [ ] TODO
+Status : [x] DONE
 Type : [PARALLEL]
 Priority : HIGH
 Mô tả : Tạo toàn bộ folder structure, package.json với dependencies,
@@ -91,7 +91,7 @@ Depends On : NONE
 Blocks : TASK-03, TASK-04, TASK-05, TASK-06
 
 TASK-02: Core Logger Module
-Status : [ ] TODO
+Status : [x] DONE
 Type : [PARALLEL]
 Priority : HIGH
 Mô tả : Winston logger, log ra console (màu theo level) và file
@@ -107,7 +107,7 @@ Depends On : NONE
 Blocks : TASK-03
 
 TASK-03: Core Engine + Plugin Loader
-Status : [ ] TODO
+Status : [x] DONE
 Type : [SEQUENTIAL → TASK-01, TASK-02]
 Priority : HIGH
 Mô tả : Auto-discover services từ ./services/_.js, load config YAML,
@@ -122,7 +122,7 @@ Depends On : TASK-01, TASK-02
 Blocks : TASK-04, TASK-05, TASK-07, TASK-09, TASK-10
 
 TASK-04: Config Manager (YAML + CLI update)
-Status : [ ] TODO
+Status : [x] DONE
 Type : [SEQUENTIAL → TASK-03]
 Priority : HIGH
 Mô tả : Đọc/ghi config YAML per service. Hỗ trợ thêm/sửa/xoá profile
@@ -140,7 +140,7 @@ Depends On : TASK-03
 Blocks : TASK-05, TASK-06, TASK-07
 
 TASK-05: Session State Manager
-Status : [ ] TODO
+Status : [~] PARTIAL
 Type : [SEQUENTIAL → TASK-04]
 Priority : HIGH
 Mô tả : Đọc/ghi ./state/session.yaml. Lưu last-used service, profile,
@@ -157,7 +157,7 @@ Depends On : TASK-04
 Blocks : TASK-09, TASK-10
 
 TASK-06: Task File Engine
-Status : [ ] TODO
+Status : [x] DONE
 Type : [SEQUENTIAL → TASK-04]
 Priority : HIGH
 Mô tả : Engine đọc ./tasks/<name>.yaml, validate schema, thực thi
@@ -176,7 +176,7 @@ Depends On : TASK-04
 Blocks : TASK-08, TASK-09
 
 TASK-07: Service — Supabase (mẫu chuẩn)
-Status : [ ] TODO
+Status : [x] DONE
 Type : [SEQUENTIAL → TASK-04]
 Priority : HIGH
 Mô tả : Plugin Supabase Management API làm mẫu chuẩn cho tất cả
@@ -194,7 +194,7 @@ Depends On : TASK-04
 Blocks : TASK-08
 
 TASK-08: Task File mẫu — Supabase
-Status : [ ] TODO
+Status : [x] DONE
 Type : [SEQUENTIAL → TASK-06, TASK-07]
 Priority : HIGH
 Mô tả : Tạo ./tasks/supabase-example.yaml minh hoạ đầy đủ tính năng:
@@ -209,7 +209,7 @@ Depends On : TASK-06, TASK-07
 Blocks : TASK-09
 
 TASK-09: Interactive CLI + Parallel Runner
-Status : [ ] TODO
+Status : [x] DONE
 Type : [SEQUENTIAL → TASK-05, TASK-06, TASK-08]
 Priority : HIGH
 Mô tả : Main CLI flow dùng inquirer. Hai luồng: (A) chọn task file
@@ -230,7 +230,7 @@ Depends On : TASK-05, TASK-06, TASK-08
 Blocks : TASK-10
 
 TASK-10: Protocol — .opushforce.message + CHANGE_LOGS
-Status : [ ] TODO
+Status : [x] DONE
 Type : [SEQUENTIAL → TASK-09]
 Priority : HIGH
 Mô tả : Sau mỗi lần thực thi task thành công, tự động cập nhật 3 file
@@ -246,7 +246,7 @@ Depends On : TASK-09
 Blocks : TASK-11
 
 TASK-11: ZIP Export + Config Templates + README
-Status : [ ] TODO
+Status : [x] DONE
 Type : [SEQUENTIAL → TASK-10]
 Priority : MEDIUM
 Mô tả : Tạo ZIP toàn bộ code khi chạy trên môi trường web. Tạo
@@ -263,6 +263,23 @@ Quick Verify : → node index.js --export-zip && unzip -t cli-service-manager-\*
 Depends On : TASK-10
 Blocks : NONE
 
+
+
+### TASK-12: Governance — Status source of truth + evidence checklist
+Status : [x] DONE
+Type : [PARALLEL]
+Priority : HIGH
+Mô tả : Chuẩn hoá quản trị tiến độ để Task Board không lệch codebase.
+Completion Conditions:
+✅ Có file machine-readable `TASK_STATUS.yaml` làm nguồn sự thật trạng thái task
+✅ Sau mỗi lần chạy task/manual thành công, tự động cập nhật metadata `last_execution` trong TASK_STATUS.yaml
+✅ Definition of Done yêu cầu evidence commands + expected output (pass/fail)
+✅ Có tiêu chí state consistency: session.yaml vs configs/<service>.yaml
+✅ Có regression checklist tối thiểu: --help, task schema validate, service actions introspection, menu smoke test
+Quick Verify : → node -e "const fs=require('fs'); console.log(fs.existsSync('./TASK_STATUS.yaml')?'OK':'MISSING')"
+Depends On : NONE
+Blocks : NONE
+
 ——— RULES ĐỌC TASK BOARD ———
 
 1. Tìm tất cả [PARALLEL] có Status TODO → thực hiện ngay, không cần chờ
@@ -272,6 +289,39 @@ Blocks : NONE
 5. Thứ tự ưu tiên: BLOCKER → HIGH PARALLEL → HIGH SEQUENTIAL → MEDIUM
 
 ---
+
+
+
+## [4.1] TASK GOVERNANCE (MỚI)
+
+### Status source of truth
+- File chuẩn duy nhất: `./TASK_STATUS.yaml`
+- Task Board markdown chỉ là view để đọc nhanh; khi conflict, ưu tiên `TASK_STATUS.yaml`.
+- Sau mỗi lần run thành công (task/manual), phải cập nhật:
+  - `last_execution.at` (ISO timestamp)
+  - `last_execution.service`
+  - `last_execution.task`
+
+### Definition of Done (bắt buộc)
+Mỗi task chỉ được đánh DONE khi có đủ:
+1. Code/artefact đã có trong repo
+2. Evidence commands đã chạy
+3. Expected output đạt PASS
+4. Cập nhật `TASK_STATUS.yaml` + Task Board
+
+### State consistency rule
+- Nguồn state runtime: `state/session.yaml`
+- Nguồn default config theo service: `configs/<service>.yaml:last_used`
+- Sau run **SUCCESS**:
+  - cập nhật session: `last_profile`, `last_task`/`last_action`, `last_run_at`
+  - cập nhật config.last_used tương ứng
+- Nếu run PARTIAL/FAILED: chỉ cập nhật session, không ghi đè `config.last_used`
+
+### Regression checklist tối thiểu (bắt buộc sau mỗi task lớn)
+- `node index.js --help`
+- `node -e "const t=require('./src/core/task-engine'); const y=require('js-yaml'); const fs=require('fs'); const obj=y.load(fs.readFileSync('./tasks/supabase-example.yaml','utf8')); const errs=t.validateSchema(obj); console.log(errs.length?errs:'VALID')"`
+- `node -e "const s=require('./services/supabase'); console.log(Object.keys(s.actions))"`
+- Menu smoke test: mở `node index.js` và xác nhận 4 lựa chọn chính xuất hiện
 
 ## [5] OUTPUT FORMAT
 
@@ -597,7 +647,7 @@ Entry Points:
 
 [Copy toàn bộ Task Board từ [4] vào đây — cập nhật liên tục]
 
-Quick Status: DONE: 0 | IN PROGRESS: 0 | TODO: 11 | BLOCKED: 0
+Quick Status: DONE: 10 | IN PROGRESS: 1 | TODO: 0 | BLOCKED: 0
 
 Next Actions:
 
