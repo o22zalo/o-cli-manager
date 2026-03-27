@@ -1,6 +1,6 @@
 meta:
   source_of_truth: true
-  last_updated: '2026-03-27T04:16:17.362Z'
+  last_updated: '2026-03-27T04:40:00Z'
   maintained_by: auto
 tasks:
   TASK-01:
@@ -40,8 +40,16 @@ tasks:
   TASK-12:
     title: 'Governance: status source + evidence checklist'
     status: DONE
+  TASK-13:
+    title: Task template execute-only cho agent
+    status: DONE
+    note: Tao moi task/task.md de user chi can mo ta yeu cau, agent tu thuc thi full luong
+  TASK-14:
+    title: Memory map du an cho tat ca agent
+    status: DONE
+    note: Tao memory.md gom ban do module, diem vao nhanh va checklist verify
 last_execution:
-  at: '2026-03-27T04:16:17.362Z'
-  service: supabase
-  task: manual-smoke
+  at: '2026-03-27T04:40:00Z'
+  service: cli-service-manager
+  task: docs-followup-task-template-memory
   status: SUCCESS

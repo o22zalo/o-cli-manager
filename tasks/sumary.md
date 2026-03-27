@@ -1,10 +1,10 @@
 # TASK BOARD — CLI Service Manager
 
-Last Updated : 2026-03-27 00:00 UTC
+Last Updated : 2026-03-27 04:40 UTC
 Updated By : agent
 Status Source of Truth: `TASK_STATUS.yaml`
 
-Quick Status: DONE: 10 | IN PROGRESS: 1 | TODO: 0 | BLOCKED: 0
+Quick Status: DONE: 13 | IN PROGRESS: 1 | TODO: 0 | BLOCKED: 0
 
 ---
 
@@ -21,6 +21,8 @@ Quick Status: DONE: 10 | IN PROGRESS: 1 | TODO: 0 | BLOCKED: 0
 - TASK-10 — Protocol (.opushforce.message + CHANGE_LOGS)
 - TASK-11 — ZIP Export + Config Templates + README
 - TASK-12 — Governance (Status source + evidence checklist)
+- TASK-13 — Task template execute-only cho agent
+- TASK-14 — Memory map dự án cho toàn bộ agent
 
 ## 🔄 IN PROGRESS
 
