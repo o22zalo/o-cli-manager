@@ -1,3 +1,20 @@
+---
+## [2026-03-27 04:40:00] Follow-up docs cho agent — Task template + Memory map
+
+Đã bổ sung bộ tài liệu để user chỉ cần mô tả yêu cầu trong task, agent có thể thực thi full flow nhất quán:
+
+**Những gì đã làm:**
+- Tạo `task/task.md`: mẫu task execute-only, có checklist bắt buộc đọc instructions/codebase, verify, self-review, cập nhật release docs và trạng thái task.
+- Tạo `memory.md`: bản đồ toàn dự án (entry points, module ownership, quick commands, routing file theo loại yêu cầu).
+- Đồng bộ trạng thái trong `tasks/TASK_STATUS.yaml` + `tasks/sumary.md` với 2 task mới (TASK-13, TASK-14).
+- Cập nhật `.opushforce.message`, prepend `CHANGE_LOGS.md`, prepend `CHANGE_LOGS_USER.md` theo đúng protocol follow-up.
+
+**Kết quả sử dụng:**
+- Agent mới vào dự án có thể đọc nhanh `memory.md` để biết ngay nên sửa file nào.
+- User chỉ cần viết yêu cầu trong `task/task.md`, không cần gửi prompt dài lặp lại quy trình.
+
+---
+
 ## [2026-03-27 03:48:00] Hoàn thiện CLI tương tác đầy đủ — TASK-08, TASK-09, TASK-11
 
 Đã hoàn thành toàn bộ phần còn lại của CLI Service Manager:
