@@ -1,1 +1,8 @@
-Bổ sung: task\task-20260327-01.md
+[CLI Update] supabase / task-20260327-01 @ 2026-03-27 07:04:30
+
+Changes:
+- Bo menu Chay Task File, giu 2 luong: Manual + Config
+- Mo rong Supabase actions: createProjectWithSetup, list/create bucket, postgres connection bundle
+- Ho tro mat khau DB mac dinh tu profile/config
+
+Impact: Don gian hoa luong CLI va day du output ket noi postgres + bucket cho supabase.

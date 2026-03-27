@@ -38,6 +38,30 @@ async function apiCall(method, urlPath, accessToken, data, logger, actionName) {
   }
 }
 
+async function apiCallWithFallback(method, urlPaths, accessToken, data, logger, actionName) {
+  let lastError = null;
+  for (const path of urlPaths) {
+    try {
+      return await apiCall(method, path, accessToken, data, logger, actionName);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error('Khong goi duoc endpoint nao cho action ' + actionName);
+}
+
+function getAccessToken(profile) {
+  return profile.credentials && profile.credentials.accessToken;
+}
+
+function getDefaultDbPass(profile) {
+  return (
+    (profile.meta && profile.meta.default_db_pass) ||
+    (profile._defaults && profile._defaults.default_db_pass) ||
+    ''
+  );
+}
+
 const actions = {
   listProjects: {
     description: 'Liet ke tat ca projects trong tai khoan Supabase',
@@ -65,19 +89,20 @@ const actions = {
       { name: 'plan',            required: false, description: 'Plan: free | pro (mac dinh: free)' },
     ],
     async execute(profile, params, logger) {
-      const token = profile.credentials && profile.credentials.accessToken;
+      const token = getAccessToken(profile);
       if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
 
       const missing = [];
       if (!params.name)            missing.push('name');
       if (!params.organization_id) missing.push('organization_id');
-      if (!params.db_pass)         missing.push('db_pass');
+      const dbPass = params.db_pass || getDefaultDbPass(profile);
+      if (!dbPass)                 missing.push('db_pass (hoac meta.default_db_pass)');
       if (missing.length > 0) return { success: false, data: null, message: 'Thieu params bat buoc: ' + missing.join(', ') };
 
       const body = {
         name:            params.name,
         organization_id: params.organization_id,
-        db_pass:         params.db_pass,
+        db_pass:         dbPass,
         region:          params.region || 'ap-southeast-1',
         plan:            params.plan   || 'free',
       };
@@ -97,7 +122,7 @@ const actions = {
       { name: 'project_ref', required: true, description: 'Reference ID cua project' },
     ],
     async execute(profile, params, logger) {
-      const token = profile.credentials && profile.credentials.accessToken;
+      const token = getAccessToken(profile);
       if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
       if (!params.project_ref) return { success: false, data: null, message: 'Thieu param: project_ref' };
 
@@ -117,7 +142,7 @@ const actions = {
       { name: 'project_ref', required: true, description: 'Reference ID cua project' },
     ],
     async execute(profile, params, logger) {
-      const token = profile.credentials && profile.credentials.accessToken;
+      const token = getAccessToken(profile);
       if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
       if (!params.project_ref) return { success: false, data: null, message: 'Thieu param: project_ref' };
 
@@ -136,13 +161,267 @@ const actions = {
       { name: 'project_ref', required: true, description: 'Reference ID cua project' },
     ],
     async execute(profile, params, logger) {
-      const token = profile.credentials && profile.credentials.accessToken;
+      const token = getAccessToken(profile);
       if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
       if (!params.project_ref) return { success: false, data: null, message: 'Thieu param: project_ref' };
 
       try {
         const data = await apiCall('POST', '/projects/' + params.project_ref + '/restore', token, null, logger, 'restoreProject');
         return { success: true, data, message: 'Da gui lenh restore cho project ' + params.project_ref };
+      } catch (err) {
+        return { success: false, data: null, message: err.message };
+      }
+    },
+  },
+
+  listStorageBuckets: {
+    description: 'Lay danh sach bucket cua project',
+    params: [
+      { name: 'project_ref', required: true, description: 'Reference ID cua project' },
+    ],
+    async execute(profile, params, logger) {
+      const token = getAccessToken(profile);
+      if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
+      if (!params.project_ref) return { success: false, data: null, message: 'Thieu param: project_ref' };
+
+      try {
+        const data = await apiCallWithFallback(
+          'GET',
+          [
+            '/projects/' + params.project_ref + '/storage/buckets',
+            '/projects/' + params.project_ref + '/buckets',
+          ],
+          token,
+          null,
+          logger,
+          'listStorageBuckets'
+        );
+        return { success: true, data, message: 'Lay duoc danh sach bucket cho project ' + params.project_ref };
+      } catch (err) {
+        return { success: false, data: null, message: err.message };
+      }
+    },
+  },
+
+  createStorageBucket: {
+    description: 'Tao bucket moi trong project',
+    params: [
+      { name: 'project_ref', required: true, description: 'Reference ID cua project' },
+      { name: 'name', required: true, description: 'Ten bucket' },
+      { name: 'public', required: false, description: 'Bucket public (true/false)' },
+    ],
+    async execute(profile, params, logger) {
+      const token = getAccessToken(profile);
+      if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
+
+      const missing = [];
+      if (!params.project_ref) missing.push('project_ref');
+      if (!params.name) missing.push('name');
+      if (missing.length > 0) return { success: false, data: null, message: 'Thieu params bat buoc: ' + missing.join(', ') };
+
+      const body = {
+        name: params.name,
+        public: String(params.public || 'false').toLowerCase() === 'true',
+      };
+
+      try {
+        const data = await apiCallWithFallback(
+          'POST',
+          [
+            '/projects/' + params.project_ref + '/storage/buckets',
+            '/projects/' + params.project_ref + '/buckets',
+          ],
+          token,
+          body,
+          logger,
+          'createStorageBucket'
+        );
+        return { success: true, data, message: "Da tao bucket '" + params.name + "' cho project " + params.project_ref };
+      } catch (err) {
+        return { success: false, data: null, message: err.message };
+      }
+    },
+  },
+
+  getPostgresConnection: {
+    description: 'Lay thong tin ket noi Postgres cua project',
+    params: [
+      { name: 'project_ref', required: true, description: 'Reference ID cua project' },
+    ],
+    async execute(profile, params, logger) {
+      const token = getAccessToken(profile);
+      if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
+      if (!params.project_ref) return { success: false, data: null, message: 'Thieu param: project_ref' };
+
+      try {
+        const data = await apiCallWithFallback(
+          'GET',
+          [
+            '/projects/' + params.project_ref + '/database',
+            '/projects/' + params.project_ref + '/database/postgres',
+            '/projects/' + params.project_ref + '/database/connection',
+          ],
+          token,
+          null,
+          logger,
+          'getPostgresConnection'
+        );
+        return { success: true, data, message: 'Lay duoc cau hinh Postgres cho project ' + params.project_ref };
+      } catch (err) {
+        return { success: false, data: null, message: err.message };
+      }
+    },
+  },
+
+  getProjectConnectionBundle: {
+    description: 'Tong hop thong tin ket noi Postgres + bucket/S3',
+    params: [
+      { name: 'project_ref', required: true, description: 'Reference ID cua project' },
+    ],
+    async execute(profile, params, logger) {
+      const token = getAccessToken(profile);
+      if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
+      if (!params.project_ref) return { success: false, data: null, message: 'Thieu param: project_ref' };
+
+      const projectRef = params.project_ref;
+      const out = {
+        project_ref: projectRef,
+        postgres: null,
+        api_keys: null,
+        buckets: null,
+        s3: {
+          endpoint: `https://${projectRef}.supabase.co/storage/v1/s3`,
+          region: 'auto',
+          note: 'Secret/Access Key can duoc cap tu dashboard hoac endpoint S3 credentials neu workspace ho tro.',
+        },
+      };
+
+      try {
+        out.postgres = await apiCallWithFallback(
+          'GET',
+          [
+            '/projects/' + projectRef + '/database',
+            '/projects/' + projectRef + '/database/postgres',
+            '/projects/' + projectRef + '/database/connection',
+          ],
+          token,
+          null,
+          logger,
+          'getProjectConnectionBundle/postgres'
+        );
+      } catch (_) {}
+
+      try {
+        out.api_keys = await apiCall('GET', '/projects/' + projectRef + '/api-keys', token, null, logger, 'getProjectConnectionBundle/api-keys');
+      } catch (_) {}
+
+      try {
+        out.buckets = await apiCallWithFallback(
+          'GET',
+          [
+            '/projects/' + projectRef + '/storage/buckets',
+            '/projects/' + projectRef + '/buckets',
+          ],
+          token,
+          null,
+          logger,
+          'getProjectConnectionBundle/buckets'
+        );
+      } catch (_) {}
+
+      return {
+        success: true,
+        data: out,
+        message: 'Da tong hop thong tin ket noi cho project ' + projectRef,
+      };
+    },
+  },
+
+  createProjectWithSetup: {
+    description: 'Tao project va setup bucket/cofig ket noi co ban',
+    params: [
+      { name: 'name', required: true, description: 'Ten project' },
+      { name: 'organization_id', required: false, description: 'Organization ID (fallback tu profile.meta.organization_id)' },
+      { name: 'db_pass', required: false, description: 'Mat khau DB (fallback tu profile.meta.default_db_pass)' },
+      { name: 'bucket_name', required: false, description: 'Ten bucket can tao sau khi tao project' },
+      { name: 'region', required: false, description: 'Region (mac dinh: ap-southeast-1)' },
+      { name: 'plan', required: false, description: 'Plan: free | pro' },
+    ],
+    async execute(profile, params, logger) {
+      const token = getAccessToken(profile);
+      if (!token) return { success: false, data: null, message: 'Thieu credentials.accessToken trong profile' };
+
+      const organizationId = params.organization_id || (profile.meta && profile.meta.organization_id);
+      const dbPass = params.db_pass || getDefaultDbPass(profile);
+      const missing = [];
+      if (!params.name) missing.push('name');
+      if (!organizationId) missing.push('organization_id (hoac meta.organization_id)');
+      if (!dbPass) missing.push('db_pass (hoac meta.default_db_pass)');
+      if (missing.length > 0) return { success: false, data: null, message: 'Thieu params bat buoc: ' + missing.join(', ') };
+
+      try {
+        const created = await apiCall(
+          'POST',
+          '/projects',
+          token,
+          {
+            name: params.name,
+            organization_id: organizationId,
+            db_pass: dbPass,
+            region: params.region || 'ap-southeast-1',
+            plan: params.plan || 'free',
+          },
+          logger,
+          'createProjectWithSetup/createProject'
+        );
+
+        const projectRef = created.id || created.ref || created.project_ref;
+        const result = {
+          project: created,
+          postgres: null,
+          api_keys: null,
+          bucket: null,
+          s3: null,
+        };
+
+        if (projectRef && params.bucket_name) {
+          try {
+            result.bucket = await apiCallWithFallback(
+              'POST',
+              ['/projects/' + projectRef + '/storage/buckets', '/projects/' + projectRef + '/buckets'],
+              token,
+              { name: params.bucket_name, public: false },
+              logger,
+              'createProjectWithSetup/createBucket'
+            );
+          } catch (bucketErr) {
+            result.bucket = { error: bucketErr.message };
+          }
+        }
+
+        if (projectRef) {
+          try {
+            result.postgres = await apiCallWithFallback(
+              'GET',
+              ['/projects/' + projectRef + '/database', '/projects/' + projectRef + '/database/postgres', '/projects/' + projectRef + '/database/connection'],
+              token,
+              null,
+              logger,
+              'createProjectWithSetup/getPostgres'
+            );
+          } catch (_) {}
+
+          try {
+            result.api_keys = await apiCall('GET', '/projects/' + projectRef + '/api-keys', token, null, logger, 'createProjectWithSetup/getKeys');
+          } catch (_) {}
+
+          result.s3 = {
+            endpoint: `https://${projectRef}.supabase.co/storage/v1/s3`,
+            region: 'auto',
+          };
+        }
+
+        return { success: true, data: result, message: "Da tao project '" + params.name + "' va hoan tat setup co ban" };
       } catch (err) {
         return { success: false, data: null, message: err.message };
       }
@@ -157,7 +436,7 @@ module.exports = {
   apiBaseUrl: API_BASE,
   configSchema: {
     required: ['credentials.accessToken'],
-    optional: ['meta.organization_id'],
+    optional: ['meta.organization_id', 'meta.default_db_pass'],
   },
   actions,
 };

@@ -29,7 +29,6 @@ Usage:
   node index.js --export-zip   Xuat toan bo code thanh file ZIP
   node index.js --help         Hien thi huong dan nay
 
-Task Files: ./tasks/*.yaml
 Configs:    ./configs/<service>.yaml
 Logs:       ./logs/YYYY-MM-DD-<service>.log
 State:      ./state/session.yaml

@@ -1,3 +1,14 @@
+## [2026-03-27 07:04:30] Toi uu luong Supabase: tao project + bucket + bundle ket noi
+
+Da bo menu chay task file khoi CLI va mo rong action Supabase theo huong van hanh truc tiep:
+- Liet ke project
+- Tao project co fallback mat khau DB mac dinh
+- Tao bucket va lay bundle ket noi Postgres + S3 endpoint
+
+Trang thai: SUCCESS.
+
+---
+
 ## [2026-03-27 06:37:37] Kiem tra toan bo tai khoan Supabase: list projects, lay API keys, demo parallel & context
 
 Thuc hien 3/4 buoc thanh cong. Trang thai: PARTIAL.

@@ -57,7 +57,17 @@ function loadConfig(serviceName, profileName) {
     process.exit(1);
   }
 
-  return { config, profile, configPath };
+  const mergedProfile = {
+    ...profile,
+    _defaults: {
+      default_db_pass:
+        (profile.meta && profile.meta.default_db_pass) ||
+        (config.defaults && config.defaults.default_db_pass) ||
+        '',
+    },
+  };
+
+  return { config, profile: mergedProfile, configPath };
 }
 
 function listProfiles(serviceName) {
