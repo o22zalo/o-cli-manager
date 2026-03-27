@@ -7,7 +7,6 @@ service: supabase
 last_used:
   profile: default
   action: listProjects
-passdefault:  
 
 profiles:
   - name: default
@@ -16,14 +15,30 @@ profiles:
       # Personal Access Token - lay tai https://supabase.com/dashboard/account/tokens
       accessToken: "YOUR_SUPABASE_PAT"
     meta:
-      # [OPTIONAL] Organization ID - de trong neu khong dung
+      # [OPTIONAL] Neu de trong, action create se tu dong goi /organizations de tim va luu vao config
       organization_id: ""
+      # [OPTIONAL] Cache organizations da lay duoc
+      organizations: []
       # [OPTIONAL] Mat khau DB mac dinh, dung cho createProject/createProjectWithSetup
+      project_pass: ""
+      # [OPTIONAL] backward compatible key cu
       default_db_pass: ""
+      # [OPTIONAL] Region mac dinh khi tao project
+      region_selection:
+        type: "specific"
+        code: "ap-southeast-1"
+
+    # [OPTIONAL] noi luu snapshot thong tin ket noi moi nhat sau getProjectConnectionBundle/createProjectWithSetup
+    cache:
+      last_connection_bundle: {}
 
 defaults:
-  # [OPTIONAL] Gia tri fallback toan cuc (neu profile khong co meta.default_db_pass)
+  # [OPTIONAL] Gia tri fallback toan cuc neu profile khong co
+  project_pass: ""
   default_db_pass: ""
+  region_selection:
+    type: "specific"
+    code: "ap-southeast-1"
 
   # Them profile khac neu co nhieu tai khoan
   # - name: client-abc

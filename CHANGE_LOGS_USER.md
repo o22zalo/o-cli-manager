@@ -1,3 +1,15 @@
+## [2026-03-27 08:05:00] Supabase workflow nang cap: dong bo organization + verify bucket read/write
+
+Da cap nhat plugin Supabase de dap ung day du flow van hanh:
+- Tu dong lay organizations va luu vao `configs/supabase.yaml` khi profile chua co `organization_id`.
+- Bo sung default cho tao project: `project_pass` va `region_selection.code`.
+- Sau khi tao project/lay bundle, thong tin Postgres + API keys + buckets + S3 endpoint duoc luu vao cache profile.
+- Them action `verifyStorageBucketRW` de tao file probe roi xoa, giup kiem thu quyen truy cap bucket.
+
+Trang thai: SUCCESS.
+
+---
+
 ## [2026-03-27 07:04:30] Toi uu luong Supabase: tao project + bucket + bundle ket noi
 
 Da bo menu chay task file khoi CLI va mo rong action Supabase theo huong van hanh truc tiep:

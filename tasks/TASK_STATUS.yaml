@@ -1,6 +1,6 @@
 meta:
   source_of_truth: true
-  last_updated: '2026-03-27T07:10:00Z'
+  last_updated: '2026-03-27T08:05:00Z'
   maintained_by: auto
 tasks:
   TASK-01:
@@ -52,8 +52,12 @@ tasks:
     title: Toi uu luong Supabase va loai bo menu Task File
     status: DONE
     note: Bo luong task file khoi menu; bo sung action Supabase cho tao project + bucket + bundle ket noi
+  TASK-16:
+    title: Supabase profile sync + bucket verify workflow
+    status: DONE
+    note: Auto sync organizations vao config, defaults project_pass/region_selection, luu bundle ket noi va verify bucket upload-delete
 last_execution:
-  at: '2026-03-27T07:10:00Z'
+  at: '2026-03-27T08:05:00Z'
   service: supabase
-  task: task-20260327-01
+  task: task-20260327-02
   status: SUCCESS

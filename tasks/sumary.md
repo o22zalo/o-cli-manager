@@ -1,10 +1,10 @@
 # TASK BOARD — CLI Service Manager
 
-Last Updated : 2026-03-27 07:10 UTC
+Last Updated : 2026-03-27 08:05 UTC
 Updated By : agent
 Status Source of Truth: `TASK_STATUS.yaml`
 
-Quick Status: DONE: 14 | IN PROGRESS: 1 | TODO: 0 | BLOCKED: 0
+Quick Status: DONE: 15 | IN PROGRESS: 1 | TODO: 0 | BLOCKED: 0
 
 ---
 
@@ -24,6 +24,7 @@ Quick Status: DONE: 14 | IN PROGRESS: 1 | TODO: 0 | BLOCKED: 0
 - TASK-13 — Task template execute-only cho agent
 - TASK-14 — Memory map dự án cho toàn bộ agent
 - TASK-15 — Tối ưu luồng Supabase và loại bỏ menu Task File
+- TASK-16 — Supabase profile sync + bucket verify workflow
 
 ## 🔄 IN PROGRESS
 

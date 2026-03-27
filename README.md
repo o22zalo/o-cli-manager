@@ -112,7 +112,11 @@ profiles:
     credentials:
       accessToken: "YOUR_SUPABASE_PAT"
     meta:
-      organization_id: "" # optional
+      organization_id: "" # optional (de trong de auto-sync tu /organizations)
+      project_pass: "" # optional, mat khau tao project mac dinh
+      region_selection:
+        type: "specific"
+        code: "ap-southeast-1"
 ```
 
 Bạn có thể khai báo nhiều profile trong cùng một file `configs/supabase.yaml`.
@@ -149,12 +153,14 @@ Khi chọn “Thao tác thủ công”, CLI sẽ:
 ### Các action Supabase hiện có
 
 - `listProjects`
+- `listOrganizations`
 - `createProject`
 - `createProjectWithSetup`
 - `getProjectApiKeys`
 - `getPostgresConnection`
 - `listStorageBuckets`
 - `createStorageBucket`
+- `verifyStorageBucketRW`
 - `getProjectConnectionBundle`
 - `pauseProject`
 - `restoreProject`
